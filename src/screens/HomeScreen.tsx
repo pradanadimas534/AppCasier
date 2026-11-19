@@ -12,7 +12,6 @@ import { PrinterSettingsModal } from '../components/PrinterSettingsModal';
 import { useKasir } from '../context/KasirContext';
 import { getSavedPrinter } from '../services/printerService';
 import {
-  applyInstantInAppUpdate,
   type AppVersionInfo,
   fetchLatestVersionInfo,
   getInstalledVersion,
@@ -42,8 +41,6 @@ export const HomeScreen: React.FC<{
   const [updateInfo, setUpdateInfo] = useState<AppVersionInfo | null>(null);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [isApplyingUpdate, setIsApplyingUpdate] = useState(false);
-  const [updateProgress, setUpdateProgress] = useState(0);
 
   // Scanner modal state
   const [scannerState, setScannerState] = useState<{
@@ -77,27 +74,6 @@ export const HomeScreen: React.FC<{
     } finally {
       setCheckingUpdate(false);
     }
-  };
-
-  const handleApplyInstantUpdate = async () => {
-    if (!updateInfo || isApplyingUpdate) return;
-    setIsApplyingUpdate(true);
-    setUpdateProgress(15);
-
-    // Di Android APK, buka langsung link APK terbaru agar sistem Android
-    // mengunduh & memperbarui aplikasi (termasuk fitur native Bluetooth Printer).
-    if (updateInfo.apkUrl) {
-      setUpdateProgress(60);
-      window.open(updateInfo.apkUrl, '_blank', 'noopener,noreferrer');
-      setUpdateProgress(100);
-      setIsApplyingUpdate(false);
-      setShowUpdateModal(false);
-      return;
-    }
-
-    await applyInstantInAppUpdate(updateInfo, (pct) => {
-      setUpdateProgress(pct);
-    });
   };
 
   const handleGlobalScan = () => {
@@ -284,7 +260,7 @@ export const HomeScreen: React.FC<{
         </div>
       )}
 
-      {/* Update Modal (Instant 1-Click Update without APK Re-Download) */}
+      {/* Update Modal (Direct APK Download) */}
       {showUpdateModal && updateInfo && (
         <div className="fixed inset-0 z-50 bg-black/45 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl">
@@ -317,40 +293,29 @@ export const HomeScreen: React.FC<{
               ))}
             </div>
 
-            {isApplyingUpdate ? (
-              <div className="mt-4 space-y-2">
-                <div className="flex items-center justify-between text-[12px] font-semibold text-app-ink">
-                  <span>Memperbarui aplikasi...</span>
-                  <span>{updateProgress}%</span>
-                </div>
-                <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    style={{ width: `${updateProgress}%` }}
-                    className="h-full bg-brand-red rounded-full transition-all duration-200"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="mt-4 flex flex-col gap-2">
-                {updateInfo.hasUpdate && (
-                  <button
-                    type="button"
-                    onClick={handleApplyInstantUpdate}
-                    className="w-full py-3 rounded-xl bg-brand-red text-white font-bold text-[13px] flex items-center justify-center gap-2 active:scale-95 transition"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                    <span>Update Sekarang</span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setShowUpdateModal(false)}
-                  className="w-full py-2.5 rounded-xl text-[13px] font-medium text-gray-600 hover:bg-gray-100"
-                >
-                  Tutup
-                </button>
-              </div>
-            )}
+            <div className="mt-4 flex flex-col gap-2">
+              <a
+                href={updateInfo.apkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                download="Kasirku.apk"
+                className="w-full py-3 rounded-xl bg-brand-red text-white font-bold text-[13px] flex items-center justify-center gap-2 active:scale-95 transition"
+              >
+                <Download className="w-4 h-4" />
+                <span>
+                  {updateInfo.hasUpdate
+                    ? `Download Update (v${updateInfo.version})`
+                    : 'Unduh Ulang APK Terbaru'}
+                </span>
+              </a>
+              <button
+                type="button"
+                onClick={() => setShowUpdateModal(false)}
+                className="w-full py-2.5 rounded-xl text-[13px] font-medium text-gray-600 hover:bg-gray-100"
+              >
+                Tutup
+              </button>
+            </div>
           </div>
         </div>
       )}

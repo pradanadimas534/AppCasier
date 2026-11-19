@@ -1,10 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 
 export const DEFAULT_APP_VERSION = '1.1.0';
-export const DEFAULT_BUILD_NUMBER = 36;
-
-const STORAGE_VERSION_KEY = 'kasirku_installed_version';
-const STORAGE_BUILD_KEY = 'kasirku_installed_build';
+export const DEFAULT_BUILD_NUMBER = 37;
 
 export const VERCEL_BASE_URL = 'https://appcasier.vercel.app';
 export const GITHUB_REPO = 'pradanadimas534/AppCasier';
@@ -24,21 +21,8 @@ export interface AppVersionInfo {
 }
 
 export function getInstalledVersion(): { version: string; buildNumber: number } {
-  try {
-    const savedVer = localStorage.getItem(STORAGE_VERSION_KEY);
-    const savedBuild = parseInt(localStorage.getItem(STORAGE_BUILD_KEY) ?? '', 10);
-    const version =
-      savedVer && compareSemver(savedVer, DEFAULT_APP_VERSION) >= 0
-        ? savedVer
-        : DEFAULT_APP_VERSION;
-    const buildNumber =
-      !Number.isNaN(savedBuild) && savedBuild >= DEFAULT_BUILD_NUMBER
-        ? savedBuild
-        : DEFAULT_BUILD_NUMBER;
-    return { version, buildNumber };
-  } catch {
-    return { version: DEFAULT_APP_VERSION, buildNumber: DEFAULT_BUILD_NUMBER };
-  }
+  // Selalu gunakan versi asli yang tertanam di dalam binary APK/build ini
+  return { version: DEFAULT_APP_VERSION, buildNumber: DEFAULT_BUILD_NUMBER };
 }
 
 export function compareSemver(a: string, b: string): number {
@@ -203,41 +187,4 @@ export async function fetchLatestVersionInfo(): Promise<AppVersionInfo> {
     installed.buildNumber
   );
   return baseInfo;
-}
-
-/**
- * Menerapkan update secara instan di dalam aplikasi (OTA Web Bundle Refresh)
- * tanpa meminta pengguna mengunduh atau meng-install ulang file .apk.
- */
-export async function applyInstantInAppUpdate(
-  targetInfo: AppVersionInfo,
-  onProgress?: (pct: number) => void
-): Promise<void> {
-  const steps = [20, 45, 75, 92, 100];
-  for (const pct of steps) {
-    onProgress?.(pct);
-    await new Promise((r) => setTimeout(r, 220));
-  }
-
-  try {
-    localStorage.setItem(STORAGE_VERSION_KEY, targetInfo.version);
-    localStorage.setItem(STORAGE_BUILD_KEY, String(targetInfo.buildNumber));
-  } catch {
-    // ignore storage quota errors
-  }
-
-  try {
-    if ('caches' in window) {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((k) => caches.delete(k)));
-    }
-    if ('serviceWorker' in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map((r) => r.update()));
-    }
-  } catch {
-    // ignore cache clear errors
-  }
-
-  window.location.reload();
 }
