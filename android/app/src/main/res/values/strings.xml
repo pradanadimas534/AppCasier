@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Kasirku</string>
+    <string name="title_activity_main">Kasirku</string>
+    <string name="package_name">com.example.kasir</string>
+    <string name="custom_url_scheme">com.example.kasir</string>
+    <string name="server_client_id">19959687372-ssoq87ktac1ngl3kc5bbgl2iei2douta.apps.googleusercontent.com</string>
+</resources>

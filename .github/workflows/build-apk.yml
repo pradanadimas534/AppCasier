@@ -12,13 +12,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      # Isi lewat: repo Settings -> Secrets and variables -> Actions -> New repository secret
-      # Nama: KEYSTORE_BASE64  (isi: hasil base64 dari android/app/kasir.jks)
       KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -26,46 +30,32 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: 3.41.4
-          cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Install dependencies & build React bundle
+        run: |
+          npm ci
+          npm test
+          npm run build
+          npx cap sync android
 
       - name: Decode release keystore
         run: |
-          if [ -z "$KEYSTORE_BASE64" ]; then
-            echo "::error::Secret KEYSTORE_BASE64 belum di-set. Tambahkan di"
-            echo "::error::repo Settings -> Secrets and variables -> Actions."
-            echo "::error::Isinya = seluruh isi file KEYSTORE_BASE64.txt di root project."
-            exit 1
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' \
+              | base64 -d --ignore-garbage > android/app/kasir.jks
+            echo "Keystore decoded: $(wc -c < android/app/kasir.jks) bytes"
+          else
+            echo "KEYSTORE_BASE64 not set; falling back to debug signing config."
           fi
-          # Buang semua spasi/baris baru/CR sebelum decode supaya tidak korup.
-          printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' \
-            | base64 -d --ignore-garbage > android/app/kasir.jks
-          echo "Keystore decoded: $(wc -c < android/app/kasir.jks) bytes"
-          if ! keytool -list -keystore android/app/kasir.jks \
-                -storepass "${KEYSTORE_PASSWORD:-kasirku123}" \
-                -alias "${KEY_ALIAS:-kasirku}" >/dev/null 2>&1; then
-            echo "::error::Keystore tidak bisa dibaca. Isi secret KEYSTORE_BASE64"
-            echo "::error::kemungkinan kepotong saat copy. Salin ULANG seluruh isi"
-            echo "::error::KEYSTORE_BASE64.txt (harus $(printf %s "$KEYSTORE_BASE64" | tr -d '[:space:]' | wc -c) char)."
-            exit 1
-          fi
-          echo "Keystore OK."
 
       - name: Build release APK
-        run: flutter build apk --release
+        working-directory: android
+        run: ./gradlew assembleRelease
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: kasir-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
 
       - name: Publish to GitHub Release
@@ -74,5 +64,5 @@ jobs:
         with:
           tag_name: build-${{ github.run_number }}
           name: Kasir APK build ${{ github.run_number }}
-          files: build/app/outputs/flutter-apk/app-release.apk
+          files: android/app/build/outputs/apk/release/app-release.apk
           generate_release_notes: true
