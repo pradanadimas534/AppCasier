@@ -6,6 +6,7 @@ export const DEFAULT_BUILD_NUMBER = 27;
 const STORAGE_VERSION_KEY = 'kasirku_installed_version';
 const STORAGE_BUILD_KEY = 'kasirku_installed_build';
 
+export const VERCEL_BASE_URL = 'https://appcasier.vercel.app';
 export const GITHUB_REPO = 'pradanadimas534/AppCasier';
 export const GITHUB_LATEST_API = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
 export const GITHUB_RELEASES_PAGE = `https://github.com/${GITHUB_REPO}/releases/latest`;
@@ -114,8 +115,12 @@ export async function fetchLatestVersionInfo(): Promise<AppVersionInfo> {
     hasUpdate: false,
   };
 
+  const versionJsonUrl = Capacitor.isNativePlatform()
+    ? `${VERCEL_BASE_URL}/version.json?t=${Date.now()}`
+    : `/version.json?t=${Date.now()}`;
+
   try {
-    const res = await fetch(`/version.json?t=${Date.now()}`, { cache: 'no-store' });
+    const res = await fetch(versionJsonUrl, { cache: 'no-store' });
     if (res.ok) {
       const data = (await res.json()) as Partial<AppVersionInfo>;
       baseInfo = {
@@ -128,7 +133,7 @@ export async function fetchLatestVersionInfo(): Promise<AppVersionInfo> {
       };
     }
   } catch {
-    // Ignore local version.json fetch error
+    // Ignore version.json fetch error when offline
   }
 
   try {
@@ -188,7 +193,7 @@ export async function fetchLatestVersionInfo(): Promise<AppVersionInfo> {
   }
 
   if (Capacitor.isNativePlatform() && baseInfo.apkUrl.startsWith('/')) {
-    baseInfo.apkUrl = `${GITHUB_RELEASES_PAGE}/download/app-release.apk`;
+    baseInfo.apkUrl = `${VERCEL_BASE_URL}${baseInfo.apkUrl}`;
   }
 
   baseInfo.hasUpdate = isNewerVersion(
