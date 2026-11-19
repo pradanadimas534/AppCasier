@@ -162,9 +162,9 @@ export async function fetchLatestVersionInfo(): Promise<AppVersionInfo> {
       if (apkAsset?.browser_download_url) {
         if (Capacitor.isNativePlatform()) {
           baseInfo.apkUrl = apkAsset.browser_download_url;
-        }
-        if (apkAsset.size) {
-          baseInfo.sizeMb = `${(apkAsset.size / (1024 * 1024)).toFixed(1)} MB`;
+          if (apkAsset.size) {
+            baseInfo.sizeMb = `${(apkAsset.size / (1024 * 1024)).toFixed(1)} MB`;
+          }
         }
       }
       if (gh.published_at) {

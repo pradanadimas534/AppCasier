@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { ToastBanner } from './components/ToastBanner';
 import { KasirProvider, useKasir } from './context/KasirContext';
 import { DownloadScreen } from './screens/DownloadScreen';
@@ -7,34 +8,23 @@ import { LoginScreen } from './screens/LoginScreen';
 
 const AuthGate: React.FC = () => {
   const { authChecked, isLoggedIn } = useKasir();
-  const [showDownloadPage, setShowDownloadPage] = useState(() => {
-    const path = window.location.pathname.toLowerCase();
-    const params = new URLSearchParams(window.location.search);
-    return path === '/download' || params.get('page') === 'download';
-  });
+  const isNative = Capacitor.isNativePlatform();
+  const [showDownloadPage, setShowDownloadPage] = useState(false);
 
-  const openDownload = () => {
-    try {
-      window.history.pushState({}, '', '/download');
-    } catch {
-      // ignore inside file:// or WebView if pushState restricted
-    }
-    setShowDownloadPage(true);
-  };
-
-  const closeDownload = () => {
-    try {
-      window.history.pushState({}, '', '/');
-    } catch {
-      // ignore
-    }
-    setShowDownloadPage(false);
-  };
+  // Di Browser (Web), langsung tampilkan halaman Download APK saja (tanpa login browser).
+  if (!isNative) {
+    return (
+      <>
+        <DownloadScreen />
+        <ToastBanner />
+      </>
+    );
+  }
 
   if (showDownloadPage) {
     return (
       <>
-        <DownloadScreen onBackToApp={closeDownload} />
+        <DownloadScreen onBackToApp={() => setShowDownloadPage(false)} />
         <ToastBanner />
       </>
     );
@@ -51,9 +41,9 @@ const AuthGate: React.FC = () => {
   return (
     <>
       {isLoggedIn ? (
-        <HomeScreen onOpenDownloadPage={openDownload} />
+        <HomeScreen onOpenDownloadPage={() => setShowDownloadPage(true)} />
       ) : (
-        <LoginScreen onOpenDownloadPage={openDownload} />
+        <LoginScreen />
       )}
       <ToastBanner />
     </>

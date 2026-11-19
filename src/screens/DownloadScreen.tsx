@@ -18,7 +18,7 @@ import {
 import { formatTanggal } from '../utils/format';
 
 export const DownloadScreen: React.FC<{
-  onBackToApp: () => void;
+  onBackToApp?: () => void;
 }> = ({ onBackToApp }) => {
   const [info, setInfo] = useState<AppVersionInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,14 +52,18 @@ export const DownloadScreen: React.FC<{
       <div className="bg-gradient-to-br from-brand-soft to-brand-deep text-white px-5 pt-5 pb-12">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center justify-between">
-            <button
-              type="button"
-              onClick={onBackToApp}
-              className="px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 text-[13px] font-medium flex items-center gap-1.5 transition"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Buka Aplikasi</span>
-            </button>
+            {onBackToApp ? (
+              <button
+                type="button"
+                onClick={onBackToApp}
+                className="px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 text-[13px] font-medium flex items-center gap-1.5 transition"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Buka Aplikasi</span>
+              </button>
+            ) : (
+              <div />
+            )}
             <button
               type="button"
               onClick={loadInfo}
