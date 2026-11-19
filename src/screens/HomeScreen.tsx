@@ -82,7 +82,19 @@ export const HomeScreen: React.FC<{
   const handleApplyInstantUpdate = async () => {
     if (!updateInfo || isApplyingUpdate) return;
     setIsApplyingUpdate(true);
-    setUpdateProgress(10);
+    setUpdateProgress(15);
+
+    // Di Android APK, buka langsung link APK terbaru agar sistem Android
+    // mengunduh & memperbarui aplikasi (termasuk fitur native Bluetooth Printer).
+    if (updateInfo.apkUrl) {
+      setUpdateProgress(60);
+      window.open(updateInfo.apkUrl, '_blank', 'noopener,noreferrer');
+      setUpdateProgress(100);
+      setIsApplyingUpdate(false);
+      setShowUpdateModal(false);
+      return;
+    }
+
     await applyInstantInAppUpdate(updateInfo, (pct) => {
       setUpdateProgress(pct);
     });
