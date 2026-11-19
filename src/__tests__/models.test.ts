@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { isItemInTrash, parseItemFromFirestore } from '../models/itemModel';
 import { getUtangSisa, getUtangTotal, parseUtangFromMap } from '../models/utangModel';
+import { buildEscPosReceiptBytes, formatTwoColumnRow } from '../services/printerService';
 import { compareSemver, isNewerVersion, sanitizeReleaseNotes } from '../services/updateService';
 import { formatHarga, formatNomorStruk, formatQty, formatTanggal } from '../utils/format';
 
@@ -57,5 +58,28 @@ describe('ItemModel & UtangModel migration & formatters', () => {
       ['Pembaruan instan 1-klik']
     );
     expect(cleaned).toEqual(['Pembaruan instan 1-klik']);
+  });
+
+  it('formats 58mm ESC/POS receipt bytes and 32-column rows', () => {
+    const row = formatTwoColumnRow('TOTAL', 'Rp 25.000', 32);
+    expect(row.length).toBe(32);
+    expect(row.startsWith('TOTAL')).toBe(true);
+    expect(row.endsWith('Rp 25.000')).toBe(true);
+
+    const bytes = buildEscPosReceiptBytes({
+      waktu: new Date(2026, 4, 9, 14, 5, 8),
+      kasir: 'Dimas',
+      items: [{ nama: 'Indomie Goreng', qty: 2, unit: 'pcs', harga: 3500 }],
+      total: 7000,
+      bayar: 10000,
+      kembalian: 3000,
+    });
+    // Starts with ESC @ (0x1B 0x40)
+    expect(bytes[0]).toBe(0x1b);
+    expect(bytes[1]).toBe(0x40);
+    const decoded = new TextDecoder().decode(bytes);
+    expect(decoded).toContain('KASIR TOKO');
+    expect(decoded).toContain('Indomie Goreng');
+    expect(decoded).toContain('Rp 7.000');
   });
 });

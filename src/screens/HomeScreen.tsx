@@ -3,11 +3,14 @@ import {
   CheckCircle2,
   Download,
   LogOut,
+  Printer,
   RefreshCw,
   Sparkles,
 } from 'lucide-react';
 import { AppBottomNav } from '../components/AppBottomNav';
+import { PrinterSettingsModal } from '../components/PrinterSettingsModal';
 import { useKasir } from '../context/KasirContext';
+import { getSavedPrinter } from '../services/printerService';
 import {
   applyInstantInAppUpdate,
   type AppVersionInfo,
@@ -29,6 +32,10 @@ export const HomeScreen: React.FC<{
   const p = useKasir();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showPrinterModal, setShowPrinterModal] = useState(false);
+  const [savedPrinterName, setSavedPrinterName] = useState<string>(
+    () => getSavedPrinter()?.name ?? ''
+  );
 
   // Update check state
   const installed = getInstalledVersion();
@@ -175,8 +182,30 @@ export const HomeScreen: React.FC<{
               </div>
             </div>
 
-            {/* App Update & APK Download Section */}
-            <div className="px-4 mt-4 space-y-2">
+            {/* App Update & Printer Bluetooth Section */}
+            <div className="px-4 mt-4 space-y-2.5">
+              {/* Printer Bluetooth */}
+              <button
+                type="button"
+                onClick={() => {
+                  setDrawerOpen(false);
+                  setShowPrinterModal(true);
+                }}
+                className="w-full p-3 rounded-[14px] border border-gray-100 bg-gray-50/70 flex items-center gap-3 text-left hover:bg-gray-100 transition"
+              >
+                <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center text-brand-red shrink-0">
+                  <Printer className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-[12px] text-app-ink">
+                    Printer Thermal Bluetooth
+                  </div>
+                  <div className="text-[11px] text-app-muted truncate">
+                    {savedPrinterName || 'Belum terhubung — Ketuk atur'}
+                  </div>
+                </div>
+              </button>
+
               <div className="p-3 rounded-[14px] border border-gray-100 bg-gray-50/70">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] text-app-muted">
@@ -327,6 +356,14 @@ export const HomeScreen: React.FC<{
               setCurrentIndex(0);
             }
           }}
+        />
+      )}
+
+      {/* Printer Bluetooth Settings Modal */}
+      {showPrinterModal && (
+        <PrinterSettingsModal
+          onClose={() => setShowPrinterModal(false)}
+          onPrinterSelected={(dev) => setSavedPrinterName(dev?.name ?? '')}
         />
       )}
     </div>

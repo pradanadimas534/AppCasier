@@ -1,7 +1,15 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
-import { Share2 } from 'lucide-react';
+import { Printer, Settings, Share2 } from 'lucide-react';
+import { PrinterSettingsModal } from '../components/PrinterSettingsModal';
 import { SuccessCheck } from '../components/SuccessCheck';
+import { useKasir } from '../context/KasirContext';
+import {
+  getAutoPrintEnabled,
+  getSavedPrinter,
+  printReceiptToBluetooth,
+} from '../services/printerService';
 import {
   formatHarga,
   formatNomorStruk,
@@ -29,7 +37,46 @@ export const StrukScreen: React.FC<{
   data: StrukData;
   onClose: () => void;
 }> = ({ data, onClose }) => {
+  const { showToast } = useKasir();
   const nomor = formatNomorStruk(data.waktu);
+  const [printing, setPrinting] = useState(false);
+  const [printStatus, setPrintStatus] = useState<string>('');
+  const [showPrinterModal, setShowPrinterModal] = useState(false);
+  const autoPrintedRef = useRef(false);
+
+  const handlePrint = async (isAuto = false) => {
+    const saved = getSavedPrinter();
+    if (!saved) {
+      if (!isAuto) {
+        setShowPrinterModal(true);
+      }
+      return;
+    }
+
+    setPrinting(true);
+    setPrintStatus(`Mencetak ke ${saved.name}...`);
+    try {
+      await printReceiptToBluetooth(data, saved);
+      setPrintStatus(`Tercetak di ${saved.name}`);
+      showToast('Struk berhasil dicetak ke printer thermal!', 'success');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setPrintStatus(`Gagal cetak: ${msg}`);
+      showToast(msg, 'error');
+    } finally {
+      setPrinting(false);
+    }
+  };
+
+  // Otomatis cetak ke mini thermal printer Bluetooth begitu transaksi selesai
+  useEffect(() => {
+    if (autoPrintedRef.current) return;
+    autoPrintedRef.current = true;
+    if (Capacitor.isNativePlatform() && getAutoPrintEnabled() && getSavedPrinter()) {
+      handlePrint(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const buildTeksStruk = (): string => {
     const lines: string[] = [
@@ -70,7 +117,6 @@ export const StrukScreen: React.FC<{
         dialogTitle: 'Bagikan Struk',
       });
     } catch {
-      // Fallback Web / WhatsApp or clipboard
       if (navigator.share) {
         try {
           await navigator.share({ title: 'Struk Kasir Toko', text });
@@ -97,6 +143,13 @@ export const StrukScreen: React.FC<{
           <p className="text-center text-[13px] text-app-muted mt-1">
             Kembalian {formatHarga(data.kembalian)}
           </p>
+        )}
+
+        {/* Status Cetak Thermal Printer */}
+        {printStatus && (
+          <div className="mt-3 px-3.5 py-2 rounded-xl bg-gray-50 border border-gray-200 text-center text-[12px] font-medium text-app-inkSoft">
+            {printStatus}
+          </div>
         )}
 
         {/* Kertas Struk */}
@@ -149,23 +202,54 @@ export const StrukScreen: React.FC<{
       </div>
 
       {/* Footer */}
-      <div className="bg-white px-4 pt-2.5 pb-4 shadow-[0_-3px_12px_rgba(0,0,0,0.06)] flex items-center gap-2.5">
-        <button
-          type="button"
-          onClick={handleShare}
-          className="flex-1 py-3.5 rounded-[14px] border border-app-ink text-app-ink font-semibold text-[14px] flex items-center justify-center gap-2 active:scale-95 transition"
-        >
-          <Share2 className="w-4 h-4" />
-          <span>Bagikan</span>
-        </button>
+      <div className="bg-white px-4 pt-2.5 pb-4 shadow-[0_-3px_12px_rgba(0,0,0,0.06)] space-y-2">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={printing}
+            onClick={() => handlePrint(false)}
+            className="flex-1 py-3 rounded-[14px] bg-app-ink text-white font-semibold text-[13px] flex items-center justify-center gap-1.5 active:scale-95 transition disabled:opacity-50"
+          >
+            <Printer className="w-4 h-4" />
+            <span>{printing ? 'Mencetak...' : 'Cetak Struk'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowPrinterModal(true)}
+            title="Atur Printer Bluetooth"
+            className="p-3 rounded-[14px] border border-gray-300 text-app-inkSoft hover:bg-gray-50 active:scale-95 transition"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handleShare}
+            className="px-4 py-3 rounded-[14px] border border-app-ink text-app-ink font-semibold text-[13px] flex items-center justify-center gap-1.5 active:scale-95 transition"
+          >
+            <Share2 className="w-4 h-4" />
+            <span>WA</span>
+          </button>
+        </div>
+
         <button
           type="button"
           onClick={onClose}
-          className="flex-1 py-3.5 rounded-[14px] bg-brand-red text-white font-bold text-[14px] active:scale-95 transition"
+          className="w-full py-3.5 rounded-[14px] bg-brand-red text-white font-bold text-[14px] active:scale-95 transition"
         >
           Selesai
         </button>
       </div>
+
+      {showPrinterModal && (
+        <PrinterSettingsModal
+          onClose={() => setShowPrinterModal(false)}
+          onPrinterSelected={(dev) => {
+            if (dev) {
+              setPrintStatus(`Printer terpilih: ${dev.name}`);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

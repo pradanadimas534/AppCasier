@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 
-export const DEFAULT_APP_VERSION = '1.0.0';
-export const DEFAULT_BUILD_NUMBER = 26;
+export const DEFAULT_APP_VERSION = '1.1.0';
+export const DEFAULT_BUILD_NUMBER = 27;
 
 const STORAGE_VERSION_KEY = 'kasirku_installed_version';
 const STORAGE_BUILD_KEY = 'kasirku_installed_build';
