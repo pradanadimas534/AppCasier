@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { Download } from 'lucide-react';
 import { useKasir } from '../context/KasirContext';
-import { WebLandingScreen } from './WebLandingScreen';
 
 export const LoginScreen: React.FC<{
   onOpenDownloadPage?: () => void;
@@ -10,13 +10,6 @@ export const LoginScreen: React.FC<{
   const [loading, setLoading] = useState(false);
   const isNative = Capacitor.isNativePlatform();
 
-  // Di Browser (Web), tampilkan halaman Web Profile tentang aplikasi
-  // lengkap dengan tombol Login dan Download for Android (.apk).
-  if (!isNative) {
-    return <WebLandingScreen onOpenDownloadPage={onOpenDownloadPage} />;
-  }
-
-  // Di Aplikasi Android (.apk), tampilkan layar Login Mobile merah asli.
   const handleLogin = async () => {
     setLoading(true);
     const ok = await login();
@@ -74,6 +67,17 @@ export const LoginScreen: React.FC<{
               Login dengan Google
             </span>
           </button>
+
+          {!isNative && onOpenDownloadPage && (
+            <button
+              type="button"
+              onClick={onOpenDownloadPage}
+              className="mt-3 w-full h-[46px] rounded-[30px] bg-white/15 hover:bg-white/25 border border-white/30 text-white font-inter font-medium text-[13px] flex items-center justify-center gap-2 active:scale-[0.99] transition"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download Aplikasi Android (.apk)</span>
+            </button>
+          )}
         </div>
 
         {/* Footer Terms */}
