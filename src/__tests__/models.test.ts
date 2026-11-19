@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { isItemInTrash, parseItemFromFirestore } from '../models/itemModel';
 import { getUtangSisa, getUtangTotal, parseUtangFromMap } from '../models/utangModel';
+import { compareSemver, isNewerVersion } from '../services/updateService';
 import { formatHarga, formatNomorStruk, formatQty, formatTanggal } from '../utils/format';
 
 describe('ItemModel & UtangModel migration & formatters', () => {
@@ -43,5 +44,13 @@ describe('ItemModel & UtangModel migration & formatters', () => {
     const date = new Date(2026, 4, 9, 14, 5, 8); // 9 Mei 2026 14:05:08
     expect(formatTanggal(date)).toBe('9 Mei 2026');
     expect(formatNomorStruk(date)).toBe('260509-140508');
+  });
+
+  it('compares app semantic versions and build numbers for OTA update detection', () => {
+    expect(compareSemver('1.0.1', '1.0.0')).toBe(1);
+    expect(compareSemver('1.0.0', '1.0.0')).toBe(0);
+    expect(isNewerVersion('1.0.0', 2, '1.0.0', 1)).toBe(true);
+    expect(isNewerVersion('1.0.0', 1, '1.0.0', 1)).toBe(false);
+    expect(isNewerVersion('1.1.0', 1, '1.0.5', 9)).toBe(true);
   });
 });

@@ -1,11 +1,44 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ToastBanner } from './components/ToastBanner';
 import { KasirProvider, useKasir } from './context/KasirContext';
+import { DownloadScreen } from './screens/DownloadScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { LoginScreen } from './screens/LoginScreen';
 
 const AuthGate: React.FC = () => {
   const { authChecked, isLoggedIn } = useKasir();
+  const [showDownloadPage, setShowDownloadPage] = useState(() => {
+    const path = window.location.pathname.toLowerCase();
+    const params = new URLSearchParams(window.location.search);
+    return path === '/download' || params.get('page') === 'download';
+  });
+
+  const openDownload = () => {
+    try {
+      window.history.pushState({}, '', '/download');
+    } catch {
+      // ignore inside file:// or WebView if pushState restricted
+    }
+    setShowDownloadPage(true);
+  };
+
+  const closeDownload = () => {
+    try {
+      window.history.pushState({}, '', '/');
+    } catch {
+      // ignore
+    }
+    setShowDownloadPage(false);
+  };
+
+  if (showDownloadPage) {
+    return (
+      <>
+        <DownloadScreen onBackToApp={closeDownload} />
+        <ToastBanner />
+      </>
+    );
+  }
 
   if (!authChecked) {
     return (
@@ -17,7 +50,11 @@ const AuthGate: React.FC = () => {
 
   return (
     <>
-      {isLoggedIn ? <HomeScreen /> : <LoginScreen />}
+      {isLoggedIn ? (
+        <HomeScreen onOpenDownloadPage={openDownload} />
+      ) : (
+        <LoginScreen onOpenDownloadPage={openDownload} />
+      )}
       <ToastBanner />
     </>
   );

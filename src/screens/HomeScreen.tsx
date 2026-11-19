@@ -1,7 +1,19 @@
-import React, { useState } from 'react';
-import { LogOut } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import {
+  CheckCircle2,
+  Download,
+  LogOut,
+  RefreshCw,
+  Sparkles,
+} from 'lucide-react';
 import { AppBottomNav } from '../components/AppBottomNav';
 import { useKasir } from '../context/KasirContext';
+import {
+  type AppVersionInfo,
+  CURRENT_APP_VERSION,
+  CURRENT_BUILD_NUMBER,
+  fetchLatestVersionInfo,
+} from '../services/updateService';
 import {
   BarcodeScannerScreen,
   type ScanMode,
@@ -11,10 +23,17 @@ import { LaporanScreen } from './LaporanScreen';
 import { StokScreen } from './StokScreen';
 import { UtangScreen } from './UtangScreen';
 
-export const HomeScreen: React.FC = () => {
+export const HomeScreen: React.FC<{
+  onOpenDownloadPage?: () => void;
+}> = ({ onOpenDownloadPage }) => {
   const p = useKasir();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Update check state
+  const [updateInfo, setUpdateInfo] = useState<AppVersionInfo | null>(null);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   // Scanner modal state
   const [scannerState, setScannerState] = useState<{
@@ -26,6 +45,29 @@ export const HomeScreen: React.FC = () => {
     open: false,
     mode: 'cart',
   });
+
+  useEffect(() => {
+    // Background check on startup
+    fetchLatestVersionInfo()
+      .then((info) => {
+        setUpdateInfo(info);
+        if (info.hasUpdate) {
+          setShowUpdateModal(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleManualCheckUpdate = async () => {
+    setCheckingUpdate(true);
+    try {
+      const info = await fetchLatestVersionInfo();
+      setUpdateInfo(info);
+      setShowUpdateModal(true);
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
 
   const handleGlobalScan = () => {
     setScannerState({
@@ -121,6 +163,55 @@ export const HomeScreen: React.FC = () => {
               </div>
             </div>
 
+            {/* App Update & APK Download Section */}
+            <div className="px-4 mt-4 space-y-2">
+              <div className="p-3 rounded-[14px] border border-gray-100 bg-gray-50/70">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-app-muted">
+                    Versi Aplikasi
+                  </span>
+                  <span className="text-[11px] font-semibold text-app-ink">
+                    v{CURRENT_APP_VERSION} (Build {CURRENT_BUILD_NUMBER})
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={checkingUpdate}
+                  onClick={handleManualCheckUpdate}
+                  className="mt-2.5 w-full py-2 px-3 rounded-xl bg-white border border-gray-200 text-app-ink font-semibold text-[12px] flex items-center justify-center gap-2 hover:bg-gray-100 active:scale-95 transition"
+                >
+                  <RefreshCw
+                    className={`w-3.5 h-3.5 text-brand-red ${
+                      checkingUpdate ? 'animate-spin' : ''
+                    }`}
+                  />
+                  <span>
+                    {checkingUpdate ? 'Memeriksa...' : 'Cek Update Aplikasi'}
+                  </span>
+                  {updateInfo?.hasUpdate && (
+                    <span className="px-1.5 py-0.5 rounded-full bg-brand-red text-white text-[9px] font-bold">
+                      BARU
+                    </span>
+                  )}
+                </button>
+
+                {onOpenDownloadPage && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDrawerOpen(false);
+                      onOpenDownloadPage();
+                    }}
+                    className="mt-1.5 w-full py-2 px-3 rounded-xl text-brand-red font-semibold text-[12px] flex items-center justify-center gap-1.5 hover:bg-red-50 transition"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Halaman Download APK</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="flex-1" />
 
             <div className="border-t border-gray-100 p-2">
@@ -134,6 +225,66 @@ export const HomeScreen: React.FC = () => {
               >
                 <LogOut className="w-5 h-5" />
                 <span>Keluar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Update Modal */}
+      {showUpdateModal && updateInfo && (
+        <div className="fixed inset-0 z-50 bg-black/45 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-brand-red shrink-0">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[16px] text-app-ink">
+                  {updateInfo.hasUpdate
+                    ? 'Update Aplikasi Tersedia!'
+                    : 'Aplikasi Sudah Versi Terbaru'}
+                </h3>
+                <p className="text-[12px] text-app-muted">
+                  Versi Server: v{updateInfo.version} (Build{' '}
+                  {updateInfo.buildNumber})
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3.5 p-3 rounded-xl bg-gray-50 space-y-1.5 max-h-40 overflow-y-auto">
+              {updateInfo.notes.map((n, i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-2 text-[12px] text-gray-700"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 text-app-success shrink-0 mt-0.5" />
+                  <span>{n}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 flex flex-col gap-2">
+              <a
+                href={updateInfo.apkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                download="Kasirku.apk"
+                className="w-full py-3 rounded-xl bg-brand-red text-white font-bold text-[13px] flex items-center justify-center gap-2 active:scale-95 transition"
+              >
+                <Download className="w-4 h-4" />
+                <span>
+                  {updateInfo.hasUpdate
+                    ? `Download Update (v${updateInfo.version})`
+                    : 'Unduh Ulang APK Terbaru'}
+                </span>
+              </a>
+              <button
+                type="button"
+                onClick={() => setShowUpdateModal(false)}
+                className="w-full py-2.5 rounded-xl text-[13px] font-medium text-gray-600 hover:bg-gray-100"
+              >
+                Tutup
               </button>
             </div>
           </div>

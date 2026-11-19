@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { Download } from 'lucide-react';
 import { useKasir } from '../context/KasirContext';
 
-export const LoginScreen: React.FC = () => {
+export const LoginScreen: React.FC<{
+  onOpenDownloadPage?: () => void;
+}> = ({ onOpenDownloadPage }) => {
   const { login, loginError, showToast } = useKasir();
   const [loading, setLoading] = useState(false);
+  const isNative = Capacitor.isNativePlatform();
 
   const handleLogin = async () => {
     setLoading(true);
@@ -62,6 +67,17 @@ export const LoginScreen: React.FC = () => {
               Login dengan Google
             </span>
           </button>
+
+          {!isNative && onOpenDownloadPage && (
+            <button
+              type="button"
+              onClick={onOpenDownloadPage}
+              className="mt-3 w-full h-[46px] rounded-[30px] bg-white/15 hover:bg-white/25 border border-white/30 text-white font-inter font-medium text-[13px] flex items-center justify-center gap-2 active:scale-[0.99] transition"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download Aplikasi Android (.apk)</span>
+            </button>
+          )}
         </div>
 
         {/* Footer Terms */}
