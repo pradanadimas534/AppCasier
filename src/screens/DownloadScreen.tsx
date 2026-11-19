@@ -11,8 +11,8 @@ import {
 } from 'lucide-react';
 import {
   type AppVersionInfo,
-  CURRENT_APP_VERSION,
-   CURRENT_BUILD_NUMBER,
+  DEFAULT_APP_VERSION,
+  DEFAULT_BUILD_NUMBER,
   fetchLatestVersionInfo,
 } from '../services/updateService';
 import { formatTanggal } from '../utils/format';
@@ -37,7 +37,7 @@ export const DownloadScreen: React.FC<{
 
   const versionLabel = info
     ? `v${info.version} (Build ${info.buildNumber})`
-    : `v${CURRENT_APP_VERSION} (Build ${CURRENT_BUILD_NUMBER})`;
+    : `v${DEFAULT_APP_VERSION} (Build ${DEFAULT_BUILD_NUMBER})`;
 
   const apkUrl = info?.apkUrl ?? '/kasirku-latest.apk';
 

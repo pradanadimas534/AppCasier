@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { isItemInTrash, parseItemFromFirestore } from '../models/itemModel';
 import { getUtangSisa, getUtangTotal, parseUtangFromMap } from '../models/utangModel';
-import { compareSemver, isNewerVersion } from '../services/updateService';
+import { compareSemver, isNewerVersion, sanitizeReleaseNotes } from '../services/updateService';
 import { formatHarga, formatNomorStruk, formatQty, formatTanggal } from '../utils/format';
 
 describe('ItemModel & UtangModel migration & formatters', () => {
@@ -52,5 +52,10 @@ describe('ItemModel & UtangModel migration & formatters', () => {
     expect(isNewerVersion('1.0.0', 2, '1.0.0', 1)).toBe(true);
     expect(isNewerVersion('1.0.0', 1, '1.0.0', 1)).toBe(false);
     expect(isNewerVersion('1.1.0', 1, '1.0.5', 9)).toBe(true);
+    const cleaned = sanitizeReleaseNotes(
+      '*Full Changelog**: https://github.com/pradanadimas534/Kasir-Flutter/compare/build-24...build-25',
+      ['Pembaruan instan 1-klik']
+    );
+    expect(cleaned).toEqual(['Pembaruan instan 1-klik']);
   });
 });

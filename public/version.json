@@ -1,16 +1,15 @@
 {
   "version": "1.0.0",
-  "buildNumber": 1,
-  "releasedAt": "2026-11-19T12:55:00+07:00",
+  "buildNumber": 26,
+  "releasedAt": "2026-11-19T13:12:00+07:00",
   "apkUrl": "/kasirku-latest.apk",
   "githubReleaseUrl": "https://github.com/pradanadimas534/AppCasier/releases/latest",
   "sizeMb": "5.5 MB",
   "minAndroid": "Android 7.0+ (Nougat)",
   "notes": [
-    "Rilis penuh Kasirku berbasis React + Capacitor Android",
+    "Pembaruan instan 1-klik langsung di dalam aplikasi tanpa perlu download APK ulang",
     "Fitur Kasir POS (Satuan & Timbangan), Cetak & Share Struk ke WhatsApp",
     "Scanner Barcode Kamera (Mode Keranjang, Input Field, dan Hitung Stok)",
-    "Manajemen Stok, Fitur Sampah 30 Hari, Catatan Utang, dan Laporan 7 Hari",
-    "Dukungan Cek Update Aplikasi langsung dari dalam APK"
+    "Manajemen Stok, Fitur Sampah 30 Hari, Catatan Utang, dan Laporan 7 Hari"
   ]
 }
