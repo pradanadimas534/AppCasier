@@ -1,45 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import {
-  BarChart3,
-  CheckCircle2,
-  Contact,
-  Download,
-  ExternalLink,
-  LogIn,
-  QrCode,
-  Receipt,
-  RefreshCw,
-  Scale,
-  ShieldCheck,
-  Smartphone,
-  Sparkles,
-  Store,
-  Trash2,
-} from 'lucide-react';
+import React, { useState } from 'react';
 import { useKasir } from '../context/KasirContext';
-import {
-  type AppVersionInfo,
-  DEFAULT_APP_VERSION,
-  DEFAULT_BUILD_NUMBER,
-  fetchLatestVersionInfo,
-} from '../services/updateService';
-import { formatTanggal } from '../utils/format';
+import './kasirku-landing.css';
 
 export const WebLandingScreen: React.FC<{
   onOpenDownloadPage?: () => void;
-}> = ({ onOpenDownloadPage }) => {
+}> = () => {
   const { login, loginError, showToast } = useKasir();
+  const [menuOpen, setMenuOpen] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
-  const [versionInfo, setVersionInfo] = useState<AppVersionInfo | null>(null);
-  const [downloading, setDownloading] = useState(false);
-
-  useEffect(() => {
-    fetchLatestVersionInfo()
-      .then(setVersionInfo)
-      .catch(() => {});
-  }, []);
 
   const handleLogin = async () => {
+    if (loginLoading) return;
     setLoginLoading(true);
     const ok = await login();
     if (!ok) {
@@ -48,403 +19,426 @@ export const WebLandingScreen: React.FC<{
     }
   };
 
-  const versionLabel = versionInfo
-    ? `v${versionInfo.version} (Build ${versionInfo.buildNumber})`
-    : `v${DEFAULT_APP_VERSION} (Build ${DEFAULT_BUILD_NUMBER})`;
-
-  const apkUrl = versionInfo?.apkUrl ?? '/kasirku-latest.apk';
-
-  const features = [
-    {
-      icon: <Scale className="w-6 h-6 text-brand-red" />,
-      title: 'Kasir Satuan & Timbangan',
-      desc: 'Mendukung penjualan produk satuan (pcs) maupun barang curah/timbangan (gram, ons, kg) dengan tombol preset takaran cepat.',
-    },
-    {
-      icon: <QrCode className="w-6 h-6 text-brand-red" />,
-      title: 'Scanner Barcode Kamera',
-      desc: 'Gunakan kamera HP langsung sebagai pemindai barcode untuk memasukkan barang ke keranjang maupun menghitung stok barang masuk.',
-    },
-    {
-      icon: <Receipt className="w-6 h-6 text-brand-red" />,
-      title: 'Struk Digital & Bagikan ke WA',
-      desc: 'Hitung kembalian otomatis, tampilkan struk belanja rapi, dan kirim langsung ke WhatsApp pelanggan hanya dengan 1 klik.',
-    },
-    {
-      icon: <Store className="w-6 h-6 text-brand-red" />,
-      title: 'Manajemen Stok & Sampah 30 Hari',
-      desc: 'Pantau indikator stok Aman, Menipis, atau Habis. Barang yang terhapus masuk ke ruang Sampah dan bisa dipulihkan dalam 30 hari.',
-    },
-    {
-      icon: <Contact className="w-6 h-6 text-brand-red" />,
-      title: 'Catatan Utang Pelanggan',
-      desc: 'Catat kasbon/utang pelanggan lengkap dengan tanggal, rincian catatan, riwayat cicilan pembayaran, dan total sisa piutang toko.',
-    },
-    {
-      icon: <BarChart3 className="w-6 h-6 text-brand-red" />,
-      title: 'Laporan Harian & Grafik 7 Hari',
-      desc: 'Rekap otomatis omzet harian, daftar produk terlaris hari ini, analisis tingkat keramaian toko, dan grafik tren 7 hari terakhir.',
-    },
-  ];
+  const closeMenu = () => setMenuOpen(false);
+  const currentYear = new Date().getFullYear();
 
   return (
-    <div className="h-full w-full overflow-y-auto bg-white text-app-ink font-poppins">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-soft to-brand-deep p-1.5 flex items-center justify-center shadow-sm">
-              <img
-                src="/assets/images/basket.png"
-                alt="Kasir Toko"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <div>
-              <span className="font-lobster text-[24px] text-brand-red leading-none block">
-                Kasir Toko
-              </span>
-              <span className="text-[11px] text-app-muted block">
-                Kasir &amp; Operasional UMKM
-              </span>
-            </div>
-          </div>
+    <div className="kasirku-landing">
+      <header className="site-header" id="top">
+        <div className="container nav-wrap">
+          <a className="brand" href="#top" aria-label="Kasirku Beranda">
+            <img src="/assets/logo.svg" alt="" width="43" height="43" />
+            <span>
+              <strong>Kasirku</strong>
+              <small>POS Bengkel &amp; Retail</small>
+            </span>
+          </a>
 
-          <nav className="hidden md:flex items-center gap-7 text-[13px] font-medium text-app-inkSoft">
-            <a href="#fitur" className="hover:text-brand-red transition">
-              Fitur Aplikasi
+          <button
+            type="button"
+            className="menu-toggle"
+            aria-label={menuOpen ? 'Tutup menu' : 'Buka menu'}
+            aria-expanded={menuOpen}
+            aria-controls="main-nav"
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+
+          <nav className={`main-nav ${menuOpen ? 'open' : ''}`} id="main-nav">
+            <a className="active" href="#top" onClick={closeMenu}>
+              Beranda
             </a>
-            <a href="#keunggulan" className="hover:text-brand-red transition">
-              Tentang
+            <a href="#fitur" onClick={closeMenu}>
+              Fitur
             </a>
-            <a href="#download" className="hover:text-brand-red transition">
-              Download Android
+            <a href="#keunggulan" onClick={closeMenu}>
+              Keunggulan
+            </a>
+            <a href="#cara-kerja" onClick={closeMenu}>
+              Cara Kerja
+            </a>
+            <a href="#kontak" onClick={closeMenu}>
+              Kontak
             </a>
           </nav>
 
-          <div className="flex items-center gap-2.5">
-            <a
-              href={apkUrl}
-              download="Kasirku.apk"
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-brand-red text-brand-red hover:bg-red-50 font-semibold text-[13px] transition"
-            >
-              <Download className="w-4 h-4" />
-              <span>Download APK</span>
-            </a>
+          <div className="nav-actions">
             <button
               type="button"
               disabled={loginLoading}
               onClick={handleLogin}
-              className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-brand-red hover:bg-brand-deep text-white font-semibold text-[13px] shadow-sm active:scale-95 transition disabled:opacity-60"
+              className="btn btn-outline btn-small"
             >
-              <span className="w-4 h-4 rounded-full bg-white flex items-center justify-center font-inter font-bold text-[11px] text-[#4285F4]">
-                G
-              </span>
-              <span>{loginLoading ? 'Masuk...' : 'Login Kasir'}</span>
+              {loginLoading ? 'Masuk...' : 'Masuk'}
             </button>
+            <a
+              className="btn btn-primary btn-small"
+              href="/kasirku-latest.apk"
+              download="Kasirku.apk"
+            >
+              Coba Gratis <span aria-hidden="true">→</span>
+            </a>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-brand-soft via-brand-red to-brand-deep text-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-14 md:py-20 grid md:grid-cols-12 gap-10 items-center">
-          {/* Left Column: Copy & CTAs */}
-          <div className="md:col-span-7 space-y-5 text-center md:text-left">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur-sm text-[12px] font-medium">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Aplikasi Kasir Modern · Gratis &amp; Tersinkron Cloud</span>
+      <main>
+        <section className="hero">
+          <div className="hero-orb orb-one" />
+          <div className="hero-orb orb-two" />
+          <div className="container hero-grid">
+            <div className="hero-copy">
+              <div className="eyebrow">
+                <span className="spark">✦</span> Solusi Kasir Modern untuk Bengkel
+                &amp; Retail
+              </div>
+              <h1>
+                Kelola Bengkel &amp; Penjualan Retail <em>Lebih Mudah</em>
+              </h1>
+              <p className="hero-lead">
+                Aplikasi POS lengkap untuk bengkel, layanan servis, penjualan
+                retail (minuman, oli, sparepart), dan manajemen stok dalam satu
+                sistem.
+              </p>
+              <div className="hero-actions">
+                <a
+                  className="btn btn-primary btn-large"
+                  href="/kasirku-latest.apk"
+                  download="Kasirku.apk"
+                >
+                  Coba Sekarang Gratis <span aria-hidden="true">→</span>
+                </a>
+                <a className="btn btn-play btn-large" href="#fitur">
+                  <span className="play-icon">▶</span> Lihat Fitur
+                </a>
+              </div>
+              <div className="trust-row">
+                <div className="trust-item">
+                  <span className="trust-icon">↯</span>
+                  <span>
+                    <b>Setup Cepat</b>
+                    <small>Tanpa instalasi rumit</small>
+                  </span>
+                </div>
+                <div className="trust-item">
+                  <span className="trust-icon">☁</span>
+                  <span>
+                    <b>Berbasis Web</b>
+                    <small>Akses dari mana saja</small>
+                  </span>
+                </div>
+                <div className="trust-item">
+                  <span className="trust-icon">♧</span>
+                  <span>
+                    <b>Data Terjaga</b>
+                    <small>Tersinkron di akun</small>
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <h1 className="font-poppins font-bold text-[32px] sm:text-[44px] leading-[1.18]">
-              Kelola Kasir, Stok Barcode &amp; Catatan Utang Toko Lebih Mudah.
-            </h1>
-
-            <p className="font-inter text-[15px] sm:text-[17px] text-white/90 leading-relaxed max-w-xl mx-auto md:mx-0">
-              <strong>Kasir Toko</strong> membantu warung, toko kelontong, dan UMKM
-              mencatat transaksi harian, memindai barcode barang lewat kamera HP,
-              mengelola piutang pelanggan, hingga memantau grafik penjualan secara
-              real-time.
-            </p>
-
-            {/* Primary Action Buttons */}
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center md:justify-start gap-3.5">
-              <a
-                href={apkUrl}
-                download="Kasirku.apk"
-                onClick={() => {
-                  setDownloading(true);
-                  window.setTimeout(() => setDownloading(false), 3000);
-                }}
-                className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-white text-brand-red hover:bg-gray-50 font-bold text-[15px] shadow-[0_10px_25px_rgba(0,0,0,0.18)] flex items-center justify-center gap-2.5 active:scale-[0.99] transition"
-              >
-                <Download className="w-5 h-5" />
+            <div className="hero-visual">
+              <div className="visual-glow" />
+              <img
+                src="/assets/kasirku-dashboard-devices.png"
+                alt="Preview dashboard Kasirku pada laptop dan aplikasi mobile"
+                width="1648"
+                height="928"
+              />
+              <div className="floating-note">
+                <span className="note-dot" />
                 <span>
-                  {downloading
-                    ? 'Mengunduh Kasirku.apk...'
-                    : 'Download for Android (.apk)'}
+                  <b>Semua operasional</b>
+                  <small>Dalam satu dashboard</small>
                 </span>
-              </a>
+              </div>
+            </div>
+          </div>
+        </section>
 
+        <section className="proof-strip" aria-label="Ringkasan manfaat">
+          <div className="container proof-grid">
+            <div>
+              <strong>01</strong>
+              <span>
+                <b>Transaksi</b>
+                <small>Catat penjualan lebih praktis</small>
+              </span>
+            </div>
+            <div>
+              <strong>02</strong>
+              <span>
+                <b>Layanan</b>
+                <small>Kelola pekerjaan servis</small>
+              </span>
+            </div>
+            <div>
+              <strong>03</strong>
+              <span>
+                <b>Persediaan</b>
+                <small>Pantau stok barang retail</small>
+              </span>
+            </div>
+            <div>
+              <strong>04</strong>
+              <span>
+                <b>Laporan</b>
+                <small>Pantau performa usaha</small>
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <section className="section features-section" id="fitur">
+          <div className="container">
+            <div className="section-heading">
+              <span className="section-kicker">✦ Fitur Unggulan</span>
+              <h2>
+                Semua Kebutuhan Bengkel &amp; Retail dalam{' '}
+                <em>Satu Aplikasi</em>
+              </h2>
+              <p>
+                Dirancang untuk membantu operasional harian lebih rapi, efisien,
+                dan mudah dipantau.
+              </p>
+            </div>
+            <div className="feature-grid">
+              <article className="feature-card">
+                <div className="feature-icon coral">▣</div>
+                <h3>Kasir Cepat &amp; Mudah</h3>
+                <p>
+                  Proses transaksi layanan maupun penjualan retail dengan alur
+                  yang praktis.
+                </p>
+              </article>
+              <article className="feature-card">
+                <div className="feature-icon blue">⌁</div>
+                <h3>Manajemen Layanan</h3>
+                <p>
+                  Kelola layanan servis, paket pekerjaan, dan harga secara
+                  fleksibel.
+                </p>
+              </article>
+              <article className="feature-card">
+                <div className="feature-icon orange">◇</div>
+                <h3>Stok Retail</h3>
+                <p>
+                  Kelola stok minuman, oli, sparepart, dan berbagai barang retail
+                  lainnya.
+                </p>
+              </article>
+              <article className="feature-card">
+                <div className="feature-icon green">▥</div>
+                <h3>Laporan Lengkap</h3>
+                <p>
+                  Pantau penjualan, layanan, stok, dan performa bisnis melalui
+                  laporan.
+                </p>
+              </article>
+              <article className="feature-card">
+                <div className="feature-icon purple">♙</div>
+                <h3>Multi Pengguna</h3>
+                <p>
+                  Atur akses sesuai peran seperti admin, kasir, mekanik, dan
+                  owner.
+                </p>
+              </article>
+              <article className="feature-card">
+                <div className="feature-icon sky">☁</div>
+                <h3>Akses Fleksibel</h3>
+                <p>
+                  Gunakan aplikasi melalui browser desktop maupun perangkat
+                  mobile.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section className="section advantage-section" id="keunggulan">
+          <div className="container advantage-grid">
+            <div className="advantage-copy">
+              <span className="section-kicker">Kenapa Kasirku?</span>
+              <h2>
+                Operasional lebih tertata. <em>Bisnis lebih terkendali.</em>
+              </h2>
+              <p>
+                Kurangi pencatatan yang tercecer. Satukan transaksi, layanan,
+                produk, dan persediaan agar aktivitas usaha lebih mudah dipantau.
+              </p>
+              <ul className="check-list">
+                <li>
+                  <span>✓</span> Informasi transaksi lebih mudah ditelusuri
+                </li>
+                <li>
+                  <span>✓</span> Data produk dan stok berada dalam satu tempat
+                </li>
+                <li>
+                  <span>✓</span> Ringkasan aktivitas membantu evaluasi usaha
+                </li>
+                <li>
+                  <span>✓</span> Tampilan dirancang nyaman di desktop dan mobile
+                </li>
+              </ul>
               <button
                 type="button"
-                disabled={loginLoading}
                 onClick={handleLogin}
-                className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-black/25 hover:bg-black/35 border border-white/35 text-white font-semibold text-[15px] flex items-center justify-center gap-2.5 active:scale-[0.99] transition disabled:opacity-60"
+                className="text-link"
               >
-                <LogIn className="w-5 h-5" />
-                <span>Login dengan Google (Versi Web)</span>
+                Jelajahi Aplikasi <span>→</span>
               </button>
             </div>
 
-            {/* Version & Platform Badges */}
-            <div className="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-x-5 gap-y-2 text-[12px] text-white/85">
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-white" />
-                Rilis Terbaru: <strong>{versionLabel}</strong>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-white" />
-                Ukuran Ringan: <strong>{versionInfo?.sizeMb ?? '5.5 MB'}</strong>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-white" />
-                Update Instan 1-Klik di Dalam Aplikasi
-              </span>
+            <div className="benefit-panel">
+              <div className="panel-top">
+                <span className="panel-label">
+                  Satu sistem untuk aktivitas harian
+                </span>
+                <span className="live-pill">
+                  <i /> Terintegrasi
+                </span>
+              </div>
+              <div className="benefit-main">
+                <div className="benefit-symbol">✦</div>
+                <div>
+                  <b>Kontrol usaha dari satu tempat</b>
+                  <small>Mulai dari kasir hingga laporan</small>
+                </div>
+              </div>
+              <div className="mini-stat-grid">
+                <div className="mini-stat">
+                  <span className="mini-icon pink">▣</span>
+                  <b>Kasir</b>
+                  <small>Transaksi penjualan</small>
+                </div>
+                <div className="mini-stat">
+                  <span className="mini-icon blue">⌁</span>
+                  <b>Layanan</b>
+                  <small>Aktivitas servis</small>
+                </div>
+                <div className="mini-stat">
+                  <span className="mini-icon orange">◇</span>
+                  <b>Stok</b>
+                  <small>Barang retail</small>
+                </div>
+                <div className="mini-stat">
+                  <span className="mini-icon green">▥</span>
+                  <b>Laporan</b>
+                  <small>Ringkasan usaha</small>
+                </div>
+              </div>
+              <div className="panel-footer">
+                <span className="avatar-stack">
+                  <i>A</i>
+                  <i>K</i>
+                  <i>M</i>
+                </span>
+                <span>Dirancang untuk kolaborasi tim operasional</span>
+              </div>
             </div>
           </div>
+        </section>
 
-          {/* Right Column: App Showcase Card */}
-          <div className="md:col-span-5 flex justify-center">
-            <div className="w-full max-w-[340px] rounded-[28px] bg-white/10 backdrop-blur-md border border-white/25 p-5 shadow-2xl">
-              <div className="rounded-2xl bg-white text-app-ink p-5 shadow-lg">
-                <div className="flex items-center justify-between pb-3.5 border-b border-gray-100">
-                  <div>
-                    <div className="font-lobster text-[26px] text-brand-red leading-none">
-                      Kasir Toko
-                    </div>
-                    <div className="text-[11px] text-app-muted mt-0.5">
-                      Aplikasi Android &amp; Web POS
-                    </div>
-                  </div>
-                  <span className="px-2.5 py-1 rounded-full bg-green-50 text-green-700 font-bold text-[10px]">
-                    SIAP PAKAI
-                  </span>
-                </div>
+        <section className="section workflow-section" id="cara-kerja">
+          <div className="container">
+            <div className="section-heading">
+              <span className="section-kicker">Alur Sederhana</span>
+              <h2>
+                Mulai kelola usaha dalam <em>beberapa langkah</em>
+              </h2>
+              <p>Alur penggunaan yang mudah dipahami oleh tim operasional.</p>
+            </div>
+            <div className="steps-grid">
+              <div className="step-card">
+                <span className="step-number">01</span>
+                <div className="step-icon">↗</div>
+                <h3>Masuk Aplikasi</h3>
+                <p>Buka Kasirku melalui web atau perangkat yang digunakan.</p>
+              </div>
+              <div className="step-card">
+                <span className="step-number">02</span>
+                <div className="step-icon">▣</div>
+                <h3>Kelola Aktivitas</h3>
+                <p>Catat transaksi, layanan, produk, dan pergerakan stok.</p>
+              </div>
+              <div className="step-card">
+                <span className="step-number">03</span>
+                <div className="step-icon">▥</div>
+                <h3>Pantau Laporan</h3>
+                <p>Lihat ringkasan aktivitas untuk membantu keputusan usaha.</p>
+              </div>
+            </div>
+          </div>
+        </section>
 
-                <div className="my-5 flex justify-center">
-                  <img
-                    src="/assets/images/basket.png"
-                    alt="Ilustrasi Kasir Toko"
-                    className="w-44 h-44 object-contain"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-center bg-app-surface p-3 rounded-xl">
-                  <div>
-                    <div className="text-[11px] text-app-muted">Database</div>
-                    <div className="font-bold text-[13px] text-app-ink">
-                      Cloud &amp; Offline
-                    </div>
-                  </div>
-                  <div className="border-l border-gray-200">
-                    <div className="text-[11px] text-app-muted">Biaya</div>
-                    <div className="font-bold text-[13px] text-app-success">
-                      100% Gratis
-                    </div>
-                  </div>
-                </div>
-
+        <section className="cta-section" id="kontak">
+          <div className="container cta-box">
+            <div className="cta-decoration" />
+            <div className="cta-content">
+              <span className="section-kicker light">Saatnya lebih praktis</span>
+              <h2>Siap mengelola bengkel &amp; retail dengan lebih mudah?</h2>
+              <p>
+                Mulai gunakan Kasirku untuk membantu aktivitas operasional harian
+                bisnis Anda.
+              </p>
+              <div className="cta-actions">
+                <a
+                  className="btn btn-white btn-large"
+                  href="/kasirku-latest.apk"
+                  download="Kasirku.apk"
+                >
+                  Download Aplikasi <span>→</span>
+                </a>
                 <button
                   type="button"
+                  disabled={loginLoading}
                   onClick={handleLogin}
-                  className="mt-4 w-full py-3 rounded-xl bg-[#FBECEC] hover:bg-red-100/80 text-app-ink font-semibold text-[13px] flex items-center justify-center gap-2 transition"
+                  className="btn btn-glass btn-large"
                 >
-                  <span className="w-5 h-5 rounded-full bg-white flex items-center justify-center font-inter font-bold text-[12px] text-[#4285F4]">
-                    G
-                  </span>
-                  <span>Masuk dengan Akun Google</span>
+                  {loginLoading ? 'Memproses Login...' : 'Masuk Versi Web'}
                 </button>
               </div>
             </div>
+            <div className="cta-stamp">
+              Kasirku
+              <br />
+              <small>POS Bengkel &amp; Retail</small>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
-      {/* Features Grid Section */}
-      <section id="fitur" className="py-16 px-4 sm:px-6 max-w-6xl mx-auto">
-        <div className="text-center max-w-2xl mx-auto">
-          <span className="text-brand-red font-bold text-[12px] uppercase tracking-wider">
-            Fitur Lengkap Operasional Toko
-          </span>
-          <h2 className="font-bold text-[26px] sm:text-[32px] text-app-ink mt-1">
-            Semua yang Dibutuhkan Kasir Toko dalam Satu Aplikasi
-          </h2>
-          <p className="text-[14px] text-app-muted mt-2">
-            Dirancang khusus agar ringan, cepat dipakai melayani pembeli, dan
-            tetap aman tersimpan di akun Google Anda.
+      <footer className="site-footer">
+        <div className="container footer-main">
+          <a className="brand footer-brand" href="#top">
+            <img src="/assets/logo.svg" alt="" width="40" height="40" />
+            <span>
+              <strong>Kasirku</strong>
+              <small>POS Bengkel &amp; Retail</small>
+            </span>
+          </a>
+          <p>
+            Solusi praktis untuk membantu pengelolaan transaksi, layanan, dan
+            stok retail.
           </p>
-        </div>
-
-        <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {features.map((f, i) => (
-            <div
-              key={i}
-              className="p-6 rounded-2xl bg-white border border-gray-100 shadow-soft hover:border-brand-red/30 transition"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
-                {f.icon}
-              </div>
-              <h3 className="font-bold text-[17px] text-app-ink">{f.title}</h3>
-              <p className="text-[13px] text-gray-600 mt-2 leading-relaxed">
-                {f.desc}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* About / Keunggulan Section */}
-      <section
-        id="keunggulan"
-        className="py-14 px-4 sm:px-6 bg-app-surface border-y border-gray-100"
-      >
-        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-green-50 text-app-success shrink-0">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="font-bold text-[15px] text-app-ink">
-                Data Aman di Akun Google
-              </h4>
-              <p className="text-[13px] text-gray-600 mt-1 leading-relaxed">
-                Seluruh data barang, riwayat transaksi, dan catatan utang
-                tersimpan di akun Firebase/Google Anda. Ganti HP tidak akan
-                membuat data hilang.
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-red-50 text-brand-red shrink-0">
-              <RefreshCw className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="font-bold text-[15px] text-app-ink">
-                Update 1-Klik Tanpa Ribet
-              </h4>
-              <p className="text-[13px] text-gray-600 mt-1 leading-relaxed">
-                Cukup install file APK sekali saja. Ketika ada pembaruan fitur,
-                cukup klik tombol <strong>Update Sekarang</strong> di dalam
-                aplikasi tanpa perlu download APK ulang.
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-amber-50 text-amber-600 shrink-0">
-              <Trash2 className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="font-bold text-[15px] text-app-ink">
-                Perlindungan Salah Hapus
-              </h4>
-              <p className="text-[13px] text-gray-600 mt-1 leading-relaxed">
-                Dilengkapi folder Sampah otomatis selama 30 hari sehingga produk
-                yang tidak sengaja terhapus dapat dikembalikan kapan saja.
-              </p>
-            </div>
+          <div className="footer-links">
+            <a href="#fitur">Fitur</a>
+            <a href="#keunggulan">Keunggulan</a>
+            <a href="#cara-kerja">Cara Kerja</a>
+            <button type="button" onClick={handleLogin}>
+              Aplikasi
+            </button>
           </div>
         </div>
-      </section>
-
-      {/* Download & Installation Guide Section */}
-      <section id="download" className="py-16 px-4 sm:px-6 max-w-5xl mx-auto">
-        <div className="rounded-3xl bg-gradient-to-br from-brand-soft to-brand-deep text-white p-6 sm:p-10 shadow-xl grid md:grid-cols-12 gap-8 items-center">
-          <div className="md:col-span-7 space-y-4">
-            <span className="inline-block px-3 py-1 rounded-full bg-white/20 text-[11px] font-bold tracking-wider uppercase">
-              Unduh Aplikasi Android
-            </span>
-            <h2 className="font-bold text-[24px] sm:text-[30px] leading-tight">
-              Pasang Kasir Toko di HP Android Anda Sekarang
-            </h2>
-            <p className="text-[14px] text-white/90 leading-relaxed">
-              Dapatkan pengalaman penuh pemindai barcode kamera dan performa
-              responsif dengan mengunduh file instalasi resmi{' '}
-              <strong>Kasirku.apk</strong> ({versionLabel}).
-            </p>
-
-            <div className="pt-2 flex flex-wrap items-center gap-3">
-              <a
-                href={apkUrl}
-                download="Kasirku.apk"
-                className="px-6 py-3.5 rounded-2xl bg-white text-brand-red hover:bg-gray-50 font-bold text-[14px] shadow-md inline-flex items-center gap-2 active:scale-95 transition"
-              >
-                <Download className="w-5 h-5" />
-                <span>Download for Android (.apk)</span>
-              </a>
-
-              {onOpenDownloadPage && (
-                <button
-                  type="button"
-                  onClick={onOpenDownloadPage}
-                  className="px-5 py-3.5 rounded-2xl bg-white/15 hover:bg-white/25 border border-white/30 text-white font-semibold text-[13px] inline-flex items-center gap-2 transition"
-                >
-                  <span>Detail Rilis &amp; Catatan Versi</span>
-                  <ExternalLink className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="md:col-span-5 bg-white text-app-ink rounded-2xl p-5 shadow-lg">
-            <div className="flex items-center gap-2 font-bold text-[14px] text-app-ink mb-3">
-              <Smartphone className="w-4 h-4 text-brand-red" />
-              <span>Cara Install di HP Android:</span>
-            </div>
-            <ol className="space-y-2 text-[12px] text-gray-700 list-decimal list-inside">
-              <li>
-                Klik tombol <strong>Download for Android (.apk)</strong>.
-              </li>
-              <li>
-                Buka file <strong>Kasirku.apk</strong> yang selesai diunduh.
-              </li>
-              <li>
-                Jika diminta izin browser, pilih{' '}
-                <strong>Izinkan dari sumber ini</strong>.
-              </li>
-              <li>
-                Klik <strong>Install</strong> lalu login dengan akun Google Anda.
-              </li>
-            </ol>
-            {versionInfo?.releasedAt && (
-              <div className="mt-3 pt-3 border-t border-gray-100 text-[11px] text-app-muted flex items-center justify-between">
-                <span>Diperbarui: {formatTanggal(versionInfo.releasedAt)}</span>
-                <span>Ukuran: {versionInfo.sizeMb}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-gray-100 py-8 px-4 sm:px-6 text-center text-[12px] text-app-muted">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="font-lobster text-[18px] text-brand-red">
-              Kasir Toko
-            </span>
-            <span>· Kasir &amp; Operasional Toko</span>
-          </div>
-          <div>
-            Dengan menggunakan aplikasi ini, Anda menyetujui Syarat &amp;
-            Ketentuan serta Kebijakan Privasi.
-          </div>
+        <div className="container footer-bottom">
+          <span>© {currentYear} Kasirku. Semua hak dilindungi.</span>
+          <span>Dibuat untuk operasional yang lebih mudah.</span>
         </div>
       </footer>
 
-      {/* Loading Overlay during Google Sign-In */}
       {loginLoading && (
         <div className="fixed inset-0 bg-black/35 z-50 flex items-center justify-center">
           <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin" />
