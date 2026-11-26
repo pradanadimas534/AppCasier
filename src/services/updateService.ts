@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 
-export const DEFAULT_APP_VERSION = '1.1.0';
-export const DEFAULT_BUILD_NUMBER = 37;
+export const DEFAULT_APP_VERSION = '1.1.1';
+export const DEFAULT_BUILD_NUMBER = 38;
 
 export const VERCEL_BASE_URL = 'https://appcasier.vercel.app';
 export const GITHUB_REPO = 'pradanadimas534/AppCasier';
@@ -118,62 +118,6 @@ export async function fetchLatestVersionInfo(): Promise<AppVersionInfo> {
     }
   } catch {
     // Ignore version.json fetch error when offline
-  }
-
-  try {
-    const ghRes = await fetch(GITHUB_LATEST_API, {
-      headers: { Accept: 'application/vnd.github+json' },
-    });
-    if (ghRes.ok) {
-      const gh = (await ghRes.json()) as {
-        tag_name?: string;
-        name?: string;
-        published_at?: string;
-        html_url?: string;
-        body?: string;
-        assets?: Array<{
-          name?: string;
-          browser_download_url?: string;
-          size?: number;
-        }>;
-      };
-
-      const apkAsset = gh.assets?.find((a) => a.name?.endsWith('.apk'));
-      const tag = gh.tag_name ?? '';
-      const buildMatch = tag.match(/build-(\d+)/i);
-      const semverMatch = tag.match(/v?(\d+\.\d+\.\d+)/);
-
-      const remoteBuild = buildMatch
-        ? parseInt(buildMatch[1], 10)
-        : baseInfo.buildNumber;
-      const remoteVersion = semverMatch ? semverMatch[1] : baseInfo.version;
-
-      if (apkAsset?.browser_download_url) {
-        if (Capacitor.isNativePlatform()) {
-          baseInfo.apkUrl = apkAsset.browser_download_url;
-          if (apkAsset.size) {
-            baseInfo.sizeMb = `${(apkAsset.size / (1024 * 1024)).toFixed(1)} MB`;
-          }
-        }
-      }
-      if (gh.published_at) {
-        baseInfo.releasedAt = gh.published_at;
-      }
-      if (gh.html_url) {
-        baseInfo.githubReleaseUrl = gh.html_url;
-      }
-      if (remoteBuild > baseInfo.buildNumber) {
-        baseInfo.buildNumber = remoteBuild;
-      }
-      if (compareSemver(remoteVersion, baseInfo.version) > 0) {
-        baseInfo.version = remoteVersion;
-      }
-      if (gh.body) {
-        baseInfo.notes = sanitizeReleaseNotes(gh.body, baseInfo.notes);
-      }
-    }
-  } catch {
-    // Use baseInfo on network error
   }
 
   if (Capacitor.isNativePlatform() && baseInfo.apkUrl.startsWith('/')) {

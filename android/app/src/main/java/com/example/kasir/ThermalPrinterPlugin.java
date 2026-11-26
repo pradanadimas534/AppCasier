@@ -161,19 +161,36 @@ public class ThermalPrinterPlugin extends Plugin {
                     socket = device.createRfcommSocketToServiceRecord(SPP_UUID);
                     socket.connect();
                 } catch (Exception primaryErr) {
-                    // Fallback to insecure RFCOMM socket for some Chinese 58mm thermal printers
+                    // Fallback 1: insecure RFCOMM socket
                     if (socket != null) {
                         try { socket.close(); } catch (Exception ignored) {}
                     }
-                    socket = device.createInsecureRfcommSocketToServiceRecord(SPP_UUID);
-                    socket.connect();
+                    try {
+                        socket = device.createInsecureRfcommSocketToServiceRecord(SPP_UUID);
+                        socket.connect();
+                    } catch (Exception secondaryErr) {
+                        // Fallback 2: direct RFCOMM Channel 1 reflection (fixes many 58mm Chinese thermal printers)
+                        if (socket != null) {
+                            try { socket.close(); } catch (Exception ignored) {}
+                        }
+                        socket = (BluetoothSocket) device.getClass()
+                            .getMethod("createRfcommSocket", int.class)
+                            .invoke(device, 1);
+                        socket.connect();
+                    }
                 }
 
                 OutputStream out = socket.getOutputStream();
-                out.write(payload);
-                out.flush();
-                // Brief pause so the printer buffer finishes receiving before closing socket
-                Thread.sleep(350);
+                // Write in small chunks so slow 58mm thermal printer buffers don't drop bytes
+                int chunkSize = 128;
+                for (int offset = 0; offset < payload.length; offset += chunkSize) {
+                    int len = Math.min(chunkSize, payload.length - offset);
+                    out.write(payload, offset, len);
+                    out.flush();
+                    Thread.sleep(25);
+                }
+                // Wait for printer buffer to finish printing before closing socket
+                Thread.sleep(1200);
 
                 JSObject res = new JSObject();
                 res.put("printed", true);

@@ -1,15 +1,15 @@
 {
-  "version": "1.1.0",
-  "buildNumber": 37,
-  "releasedAt": "2026-11-19T16:06:00+07:00",
+  "version": "1.1.1",
+  "buildNumber": 38,
+  "releasedAt": "2026-11-26T19:50:00+07:00",
   "apkUrl": "/kasirku-latest.apk",
   "githubReleaseUrl": "https://github.com/pradanadimas534/AppCasier/releases/latest",
   "sizeMb": "5.5 MB",
   "minAndroid": "Android 7.0+ (Nougat)",
   "notes": [
-    "Dukungan cetak struk otomatis ke Mini Thermal Printer Bluetooth (58mm ESC/POS)",
-    "Menu Pengaturan Printer Bluetooth + Tes Cetak di Drawer dan Layar Struk",
-    "Pembaruan instan 1-klik langsung di dalam aplikasi tanpa perlu download APK ulang",
+    "Perbaikan deteksi versi update agar tidak looping setelah aplikasi di-update",
+    "Peningkatan koneksi Bluetooth Mini Thermal Printer (3-tahap RFCOMM Channel 1 + chunked write)",
+    "Cetak struk otomatis ke Mini Thermal Printer Bluetooth 58mm ESC/POS setelah pembayaran",
     "Fitur Kasir POS, Scanner Barcode Kamera, Manajemen Stok, Catatan Utang & Laporan 7 Hari"
   ]
 }
